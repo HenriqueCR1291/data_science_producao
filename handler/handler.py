@@ -1,38 +1,45 @@
 import pickle
 import pandas as pd
-from flask             import Flask, request, Response
+from flask import Flask, request, Response
 from Rossmann import Rossmann
 
-#loading model
-model = pickle.load(open('model_rossmann.pkl','rb'))
+# loading model
+model = pickle.load(open('C:/Users/Henrique/data_science_producao/model/model_rossmann.pkl','rb'))
 
-#initialize API
+# initialize API
 app = Flask(__name__)
 
 @app.route('/rossmann/predict', methods=['POST'])
 def rossmann_predict():
-  test_json = request.get_json()
+    test_json = request.get_json()
 
-  if test_json: #there is data
-    if isinstance(test_json, dict): #unique example
-      test_raw = pd.DataFrame(test_json, index=[0])
-    
-    else: #multiple example
-      test_raw = pd.DataFrame(test_json, columns=test_json[0].keys())
+    if test_json:  # there is data
+        if isinstance(test_json, dict):  # unique example
+            test_raw = pd.DataFrame(test_json, index=[0])
 
-  #instantiate Rossmann Class
-  pipeline = Rossmann()
+        else:  # multiple example
+            test_raw = pd.DataFrame(test_json, columns=test_json[0].keys())
 
-  #data cleaning
-  df1 = pipeline.data_cleaning(test_raw)
+    # instantiate Rossmann Class
+    pipeline = Rossmann()
 
-  #feature engineering
-  df2 = pipeline.feature_engineering(df1)
+    # data cleaning
+    df1 = pipeline.data_cleaning(test_raw)
 
-  #data preparation
-  df3 = pipeline.data_preparation(df2)
+    # feature engineering
+    df2 = pipeline.feature_engineering(df1)
 
-  #prediction
-  df_response = pipeline.get_prediction(model, test_raw, df3)
+    # data preparation
+    df3 = pipeline.data_preparation(df2)
 
-  return df_response
+    # prediction
+    df_response: object = pipeline.get_prediction(model, test_raw, df3)
+
+    return df_response
+
+    else:
+    return Responsec('{}', status=200, mimetype='application/json')
+
+
+if __name__ == '__main__':
+    app.run('127.0.0.1')
