@@ -9,7 +9,6 @@ model = pickle.load(open('model_rossmann.pkl', 'rb'))
 # initialize API
 app = Flask(__name__)
 
-
 @app.route('/rossmann/predict', methods=['POST'])
 def rossmann_predict():
     test_json = request.get_json()
@@ -43,4 +42,4 @@ def rossmann_predict():
 
 
 if __name__ == '__main__':
-    app.run('127.0.0.1')
+    app.run()
