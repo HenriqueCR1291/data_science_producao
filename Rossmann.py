@@ -16,7 +16,7 @@ class Rossmann(object):
         self.promo_time_week_scaler = pickle.load(open(self.home_path + 'scaler/promo_time_week_scaler.pkl', 'rb'))
         self.year_scaler = pickle.load(open(self.home_path + 'scaler/year_scaler.pkl', 'rb'))
         self.store_type_scaler = pickle.load(open(self.home_path + 'scaler/store_type_scaler.pkl', 'rb'))
-        state = 1
+        #state = 1
 
     def data_cleaning(self, df1):
         # 1.1 Rename Columns
@@ -84,7 +84,7 @@ class Rossmann(object):
         df2['day'] = df2['date'].dt.day
 
         # week_of_year
-        df2['week_of_year'] = df2['date'].dt.isocalendar().week
+        df2['week_of_year'] = df2['date'].dt.weekofyear
 
         # year_week
         df2['year_week'] = df2['date'].dt.strftime('%Y-%W')
