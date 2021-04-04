@@ -4,7 +4,6 @@ import pandas as pd
 import numpy as np
 import math
 import datetime
-from sklearn.preprocessing import RobustScaler, MinMaxScaler, LabelEncoder
 
 
 class Rossmann(object):
@@ -17,19 +16,15 @@ class Rossmann(object):
         self.promo_time_week_scaler = pickle.load(open(self.home_path + 'parameter/promo_time_week_scaler.pkl', 'rb'))
         self.year_scaler = pickle.load(open(self.home_path + 'parameter/year_scaler.pkl', 'rb'))
         self.store_type_scaler = pickle.load(open(self.home_path + 'parameter/store_type_scaler.pkl', 'rb'))
-        # state = 1
 
     def data_cleaning(self, df1):
         # 1.1 Rename Columns
         cols_old = ['Store', 'DayOfWeek', 'Date', 'Open', 'Promo', 'StateHoliday', 'SchoolHoliday',
-                    'StoreType', 'Assortment', 'CompetitionDistance', 'CompetitionOpenSinceMonth',
-                    'CompetitionOpenSinceYear', 'Promo2', 'Promo2SinceWeek', 'Promo2SinceYear',
-                    'PromoInterval']
+                    'StoreType', 'Assortment', 'CompetitionDistance','CompetitionOpenSinceMonth',
+                    'CompetitionOpenSinceYear', 'Promo2', 'Promo2SinceWeek', 'Promo2SinceYear', 'PromoInterval']
 
         sneakcase = lambda x: inflection.underscore(x)
         cols_new = list(map(sneakcase, cols_old))
-
-        # rename
         df1.columns = cols_new
 
         # 1.3 Data types
@@ -66,15 +61,17 @@ class Rossmann(object):
             lambda x: 0 if x['promo_interval'] == 0 else 1 if x['month_map'] in x['promo_interval'].split(',') else 0,
             axis=1)
 
-        # 1.6 Change Type
-        df1['competition_open_since_month'] = df1['competition_open_since_month'].astype('int64')
-        df1['competition_open_since_year'] = df1['competition_open_since_year'].astype('int64')
-        df1['promo2_since_week'] = df1['promo2_since_week'].astype('int64')
-        df1['promo2_since_year'] = df1['promo2_since_year'].astype('int64')
+        # 1.6 Change Types
+        df1['competition_open_since_month'] = df1['competition_open_since_month'].astype('int')
+        df1['competition_open_since_year'] = df1['competition_open_since_year'].astype('int')
+
+        df1['promo2_since_week'] = df1['promo2_since_week'].astype('int')
+        df1['promo2_since_year'] = df1['promo2_since_year'].astype('int')
 
         return df1
 
     def feature_engineering(self, df2):
+        # 2.4 Feature Engineering
         # year
         df2['year'] = df2['date'].dt.year
 
@@ -93,8 +90,7 @@ class Rossmann(object):
         # competition_since
         df2['competition_since'] = df2.apply(
             lambda x: datetime.datetime(year=x['competition_open_since_year'], month=x['competition_open_since_month'],
-                                        day=1),
-            axis=1)
+                                        day=1), axis=1)
         df2['competition_time_month'] = ((df2['date'] - df2['competition_since']) / 30).apply(lambda x: x.days).astype(
             int)
 
@@ -112,16 +108,18 @@ class Rossmann(object):
         df2['state_holiday'] = df2['state_holiday'].apply(lambda
                                                               x: 'public_holiday' if x == 'a' else 'easter_holiday' if x == 'b' else 'christmas' if x == 'c' else 'regular_day')
 
-        # Filtering lines
-        df2 = df2[(df2['open'] != 0)]
+        # 3.0 Filtering Variables
+        # 3.1 Filtering lines
+        df2 = df2[df2['open'] != 0]
 
-        # Filtering cols
+        # 3.2 Filtering cols
         cols_drop = ['open', 'promo_interval', 'month_map']
         df2 = df2.drop(cols_drop, axis=1)
 
         return df2
 
     def data_preparation(self, df5):
+        # 5.2 Rescaling
         # competition_distance
         df5['competition_distance'] = self.competition_distance_scaler.fit_transform(
             df5[['competition_distance']].values)
@@ -136,6 +134,7 @@ class Rossmann(object):
         # year
         df5['year'] = self.year_scaler.fit_transform(df5[['year']].values)
 
+        # 5.3.1 Encoding
         # state_holiday - One Hot Encoding
         df5 = pd.get_dummies(df5, prefix=['state_holiday'], columns=['state_holiday'])
 
@@ -146,6 +145,7 @@ class Rossmann(object):
         assortment_dict = {'basic': 1, 'extra': 2, 'extended': 3}
         df5['assortment'] = df5['assortment'].map(assortment_dict)
 
+        # 5.3.3 Nature Transformation
         # day_of_week
         df5['day_of_week_sin'] = df5['day_of_week'].apply(lambda x: np.sin(x * (2. * np.pi / 7)))
         df5['day_of_week_cos'] = df5['day_of_week'].apply(lambda x: np.cos(x * (2. * np.pi / 7)))
@@ -177,6 +177,6 @@ class Rossmann(object):
         pred = model.predict(test_data)
 
         # join pred into the original data
-        original_data['predicition'] = np.expm1(pred)
+        original_data['prediction'] = np.expm1(pred)
 
-        return original_data.to_json(orient='records', data_format='iso')
+        return original_data.to_json(orient='records', date_format='iso')
