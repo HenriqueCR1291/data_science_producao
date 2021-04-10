@@ -30,4 +30,3 @@ print('Status Code {}'.format(r.status_code))
 d1 = pd.DataFrame(r.json(),columns=r.json()[0].keys())
 
 d2 = d1[['store', 'prediction']].groupby('store').sum().reset_index()
-d2
