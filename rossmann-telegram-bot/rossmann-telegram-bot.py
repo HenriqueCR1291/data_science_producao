@@ -13,8 +13,14 @@ token = '1730000057:AAFZ7zMcq7KomedEFzCk8ceCgZX_Hk6TTlk'
 #get Webhook
 #https://api.telegram.org/bot1730000057:AAFZ7zMcq7KomedEFzCk8ceCgZX_Hk6TTlk/setWebhook?url=https://f7e8c155be4ecb.localhost.run
 
+#delete Webhook
+#https://api.telegram.org/bot1730000057:AAFZ7zMcq7KomedEFzCk8ceCgZX_Hk6TTlk/deleteWebhook
+
 #get update
 #https://api.telegram.org/bot1730000057:AAFZ7zMcq7KomedEFzCk8ceCgZX_Hk6TTlk/getUpdates
+
+#send message
+#https://api.telegram.org/bot1730000057:AAFZ7zMcq7KomedEFzCk8ceCgZX_Hk6TTlk/sendMessage?chat_id=1216341880&text=Hi Henrique
 
 def send_message(chat_id,text):
     url = 'https://api.telegram.org/bot{}/'.format(token)
@@ -71,7 +77,6 @@ def parse_message(message):
         store_id = int(store_id)
 
     except ValueError:
-        send_message(chat_id, 'StoreID is wrong')
         store_id = 'error'
 
     return chat_id, store_id
@@ -81,9 +86,8 @@ app = Flask(__name__)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    if request.method.get_json():
+    if request.method == "POST":
         message = request.get_json()
-
         chat_id, store_id = parse_message(message)
 
         if store_id != 'error':
@@ -98,7 +102,9 @@ def index():
                 d2 = d1[['store', 'prediction']].groupby('store').sum().reset_index()
 
                 #send message
-                msg = f'Store Number {d2["store"].values[0]} will sell $: {d2["prediction"].values[0]:, .2f} in the next 6 months'
+                msg = d2
+                send_message(chat_id, msg)
+                return Response('OK', status=200)
 
             else:
                 send_message(chat_id, 'Store Not Available')
