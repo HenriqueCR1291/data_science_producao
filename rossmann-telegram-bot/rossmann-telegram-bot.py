@@ -1,4 +1,3 @@
-import pandas as pd
 import requests
 import json
 from flask import Flask, request, Response
@@ -23,10 +22,10 @@ token = '1730000057:AAFZ7zMcq7KomedEFzCk8ceCgZX_Hk6TTlk'
 #https://api.telegram.org/bot1730000057:AAFZ7zMcq7KomedEFzCk8ceCgZX_Hk6TTlk/sendMessage?chat_id=1216341880&text=Hi Henrique
 
 def send_message(chat_id,text):
-    url = 'https://api.telegram.org/bot{}/'.format(token)
-    url = url + 'sendMessage?chat_id={}'.format(chat_id)
+    url = 'https://api.telegram.org/bot{}/', format(token)
+    url = url + 'sendMessage?chat_id={}', format(chat_id)
     r = requests.post(url, json={'text': text})
-    print('Status Code {}'.format(r.status_code))
+    print('Status Code {}', format(r.status_code))
 
     return None
 
@@ -49,7 +48,6 @@ def load_dataset(store_id):
 
         #convert dataframe to json
         data = json.dumps(df_test.to_dict(orient='records'))
-
     else:
         data = 'error'
 
@@ -62,7 +60,7 @@ def predict(data):
     data = data
 
     r = requests.post(url, data=data, headers=header)
-    print('Status Code {}'.format(r.status_code))
+    print('Status Code {}', format(r.status_code))
     d1 = pd.DataFrame(r.json(),columns=r.json()[0].keys())
 
     return d1
@@ -75,7 +73,6 @@ def parse_message(message):
 
     try:
         store_id = int(store_id)
-
     except ValueError:
         store_id = 'error'
 
@@ -86,7 +83,7 @@ app = Flask(__name__)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    if request.method == "POST":
+    if request.method == 'POST':
         message = request.get_json()
         chat_id, store_id = parse_message(message)
 
@@ -102,13 +99,13 @@ def index():
                 d2 = d1[['store', 'prediction']].groupby('store').sum().reset_index()
 
                 #send message
-                msg = d2
+                msg = 'Store Number ', format(d2['store'].values[0]), 'will sell $ ', format(d2['prediction'].values[0])
                 send_message(chat_id, msg)
                 return Response('OK', status=200)
-
             else:
                 send_message(chat_id, 'Store Not Available')
                 return Response('OK', status=200)
+                import pandas as pd
 
         else:
             send_message(chat_id,'Store ID is wrong')
